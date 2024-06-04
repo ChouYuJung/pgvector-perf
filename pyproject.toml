@@ -7,7 +7,9 @@ readme = "README.md"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
+diskcache = "^5"
 pandas = "^2"
+pgvector = "^0"
 psycopg2-binary = "^2"
 python = ">=3.10,<3.13"
 sqlalchemy = "^2"
