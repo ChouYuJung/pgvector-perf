@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  pgvector-perf-postgres:
+    image: pgvector/pgvector:pg14
+    container_name: pgvector-perf-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pgvector-perf-password
+      POSTGRES_DB: pgvector-perf
+    ports:
+      - "15432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
