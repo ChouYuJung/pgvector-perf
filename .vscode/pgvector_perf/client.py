@@ -1,12 +1,17 @@
 import os
 from typing import Optional, Text
 
+from pgvector_perf import resources
 from pgvector_perf.schemas import NOT_GIVEN, NotGiven, PointWithEmbeddingSchema
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
 class PgvectorPerf:
+
+    databases: resources.Databases
+    tables: resources.Tables
+    points: resources.Points
 
     def __init__(
         self,
@@ -30,6 +35,11 @@ class PgvectorPerf:
         self._engine = create_engine(url, echo=echo)
         self._session_factory = sessionmaker(bind=self._engine)
         self._model = model
+
+        # Initialize resources
+        self.databases = resources.Databases(self)
+        self.tables = resources.Tables(self)
+        self.points = resources.Points(self)
 
     @property
     def engine(self):
