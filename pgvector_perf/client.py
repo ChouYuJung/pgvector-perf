@@ -46,6 +46,12 @@ class PgvectorPerf:
         return self._engine
 
     @property
+    def database_name(self) -> Text:
+        if self._engine.url.database is None:
+            raise ValueError("No database name provided in the URL.")
+        return self._engine.url.database
+
+    @property
     def session_factory(self):
         return self._session_factory
 
