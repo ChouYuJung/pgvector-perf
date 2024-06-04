@@ -1,10 +1,11 @@
 import os
 from typing import Optional, Text
 
-from pgvector_perf import resources
-from pgvector_perf.schemas import NOT_GIVEN, NotGiven, PointWithEmbeddingSchema
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from pgvector_perf import resources
+from pgvector_perf.schemas import NOT_GIVEN, NotGiven, PointWithEmbeddingSchema
 
 
 class PgvectorPerf:

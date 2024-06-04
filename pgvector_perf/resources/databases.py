@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+
 from sqlalchemy import text as sql_text
 
 if TYPE_CHECKING:
