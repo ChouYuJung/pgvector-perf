@@ -13,6 +13,8 @@ pgvector = "^0"
 psycopg2-binary = "^2"
 python = ">=3.10,<3.13"
 sqlalchemy = "^2"
+pydantic = "^2"
+pydantic-settings = "^2"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
