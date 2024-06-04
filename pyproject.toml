@@ -11,10 +11,11 @@ diskcache = "^5"
 pandas = "^2"
 pgvector = "^0"
 psycopg2-binary = "^2"
-python = ">=3.10,<3.13"
-sqlalchemy = "^2"
 pydantic = "^2"
 pydantic-settings = "^2"
+python = ">=3.10,<3.13"
+rich = "^13"
+sqlalchemy = "^2"
 yarl = "^1"
 
 [tool.poetry.group.dev.dependencies]
