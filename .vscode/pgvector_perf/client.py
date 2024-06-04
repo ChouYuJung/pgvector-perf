@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-class PgvectorPerfClient:
+class PgvectorPerf:
 
     def __init__(
         self,
@@ -27,7 +27,7 @@ class PgvectorPerfClient:
         if not isinstance(model, PointWithEmbeddingSchema):
             raise ValueError("Model must be an instance of PointWithEmbeddingSchema.")
 
-        self._engine = create_engine(url)
+        self._engine = create_engine(url, echo=echo)
         self._session_factory = sessionmaker(bind=self._engine)
         self._model = model
 
