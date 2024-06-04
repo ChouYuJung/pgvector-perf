@@ -1,0 +1,31 @@
+[tool.poetry]
+authors = ["Allen Chou <f1470891079@gmail.com>"]
+description = "Performance testing and benchmarking of pgvector"
+license = "MIT"
+name = "pgvector-perf"
+readme = "README.md"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+pandas = "^2"
+psycopg2-binary = "^2"
+python = ">=3.10,<3.13"
+sqlalchemy = "^2"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "*"
+poetry-plugin-export = "^1"
+pytest = "^8"
+pytest-asyncio = "*"
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+ignore = ["E203", "E704", "W503"]
+max-line-length = 88
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
