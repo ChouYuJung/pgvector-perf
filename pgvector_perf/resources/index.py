@@ -1,9 +1,6 @@
-from textwrap import dedent
-from typing import TYPE_CHECKING, Text
+from typing import TYPE_CHECKING
 
-from sqlalchemy import text as sql_text
-
-from pgvector_perf.config import logger
+from sqlalchemy import Index as SqlIndex
 
 if TYPE_CHECKING:
 
@@ -22,36 +19,15 @@ class Index:
 
     def create(self, *args, **kwargs):
         engine = self._client.engine
-        table_name: Text = self._client.model._sql_model.__tablename__
         column_name = "embedding"
         index_name = f"index_{column_name}"
 
         with engine.connect() as connection:
-            # Check if the index exists
-            check_index_query = dedent(
-                """
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM pg_class c
-                    JOIN pg_namespace n ON n.oid = c.relnamespace
-                    WHERE c.relname = :index_name
-                    AND n.nspname = 'public'
-                );
-                """
+            index = SqlIndex(
+                index_name,
+                self._client.model._sql_model.embedding,
+                postgresql_using="hnsw",
+                postgresql_with={"m": 16, "ef_construction": 64},
+                postgresql_ops={"embedding": "vector_l2_ops"},
             )
-
-            result = connection.execute(
-                sql_text(check_index_query), parameters={"index_name": index_name}
-            ).scalar()
-
-            # Create the index if it does not exist
-            if not result:
-                create_index_query = sql_text(
-                    f"""
-                    CREATE INDEX {index_name} ON {table_name} ({column_name});
-                    """.strip()
-                )
-                connection.execute(create_index_query)
-                logger.info(f"Index '{index_name}' created.")
-            else:
-                logger.debug(f"Index '{index_name}' already exists.")
+            index.create(connection, checkfirst=True)
