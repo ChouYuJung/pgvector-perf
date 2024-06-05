@@ -12,6 +12,7 @@ class PgvectorPerf:
 
     databases: resources.Databases
     tables: resources.Tables
+    index: resources.Index
     points: resources.Points
 
     def __init__(
