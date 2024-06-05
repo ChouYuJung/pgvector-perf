@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, PrivateAttr
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import declarative_base, mapped_column
 
+from pgvector_perf.config import settings
+
 Base = declarative_base()
 
 
@@ -17,8 +19,8 @@ class PointWithEmbedding(Base):
 
     id = mapped_column(Integer, primary_key=True)
     text = mapped_column(String, index=True, nullable=False)
-    model = mapped_column(String, nullable=False)
-    embedding = mapped_column(Vector(3), nullable=False)
+    model = mapped_column(String, nullable=False, default="default")
+    embedding = mapped_column(Vector(settings.vector_dimensions), nullable=False)
 
 
 class PointWithEmbeddingSchema(BaseModel):

@@ -10,6 +10,8 @@ console = Console()
 class Settings(BaseSettings):
     logger_name: Text = "pgvector_perf"
 
+    vector_dimensions: int = 1536
+
 
 settings = Settings()
 
