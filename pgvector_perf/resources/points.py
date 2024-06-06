@@ -7,6 +7,7 @@ from typing import (
     Literal,
     Optional,
     Text,
+    Tuple,
     overload,
 )
 
@@ -23,8 +24,44 @@ class Points(Generic[PointType]):
 
     _client: "PgvectorPerf[PointType]"
 
+    hard_limit: int = 1000
+
     def __init__(self, client: "PgvectorPerf[PointType]"):
         self._client = client
+
+    def query(
+        self,
+        embedding: List[float],
+        *args,
+        limit: int = 5,
+        within_distance: Optional[float] = None,
+        **kwargs,
+    ) -> List[Tuple[PointType, float]]:
+        limit = max(1, min(limit, self.hard_limit))
+        within_distance = (
+            None
+            if within_distance is not None and within_distance <= 0
+            else within_distance
+        )
+
+        sql_model = self._client.model.sql_model()
+
+        with self._client.session_factory() as session:
+            stmt = select(
+                sql_model,
+                sql_model.embedding.l2_distance(embedding).label("distance"),
+            )
+            if within_distance is not None:
+                stmt = stmt.where(
+                    sql_model.embedding.l2_distance(embedding) < within_distance
+                )
+            stmt = stmt.order_by(sql_model.embedding.l2_distance(embedding))
+            stmt = stmt.limit(limit)
+            result = session.execute(stmt).scalars().all()
+            return [
+                (self._client.model.from_sql(point), distance)
+                for point, distance in result
+            ]
 
     def list(
         self,
@@ -36,6 +73,9 @@ class Points(Generic[PointType]):
         sort_desc: bool = True,
         **kwargs,
     ) -> List[PointType]:
+        if limit is not None:
+            limit = max(1, min(limit, self.hard_limit))
+
         sql_model = self._client.model.sql_model()
 
         with self._client.session_factory() as session:
