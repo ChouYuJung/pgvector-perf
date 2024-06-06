@@ -37,6 +37,10 @@ class Points(Generic[PointType]):
         within_distance: Optional[float] = None,
         **kwargs,
     ) -> List[Tuple[PointType, float]]:
+        if len(embedding) != self._client.vector_dimensions:
+            raise ValueError(
+                f"Embedding must have {self._client.vector_dimensions} dimensions"
+            )
         limit = max(1, min(limit, self.hard_limit))
         within_distance = (
             None

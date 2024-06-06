@@ -17,7 +17,7 @@ class NotGiven:
 
 
 class PointWithEmbedding(Base):
-    __tablename__ = "point_with_embeddings"
+    __tablename__ = settings.vector_table
 
     id = mapped_column(Integer, primary_key=True)
     text = mapped_column(String, nullable=False)

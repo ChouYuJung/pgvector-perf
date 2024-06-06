@@ -21,12 +21,10 @@ class Index(Generic[PointType]):
 
     def create(self, *args, **kwargs):
         engine = self._client.engine
-        column_name = "embedding"
-        index_name = f"index_{column_name}"
 
         with engine.connect() as connection:
             index = SqlIndex(
-                index_name,
+                self._client.vector_index,
                 self._client.model._sql_model.embedding,
                 postgresql_using="hnsw",
                 postgresql_with={"m": 16, "ef_construction": 64},

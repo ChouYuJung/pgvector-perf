@@ -10,7 +10,13 @@ console = Console()
 class Settings(BaseSettings):
     logger_name: Text = "pgvector_perf"
 
+    # Program settings
     vector_dimensions: int = 1536
+    vector_table: Text = "point_with_embeddings"
+    vector_index: Text = "index_embedding"
+
+    # Extra settings
+    admin_database: Text = "postgres"
 
 
 settings = Settings()

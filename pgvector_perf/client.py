@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from pgvector_perf import resources
+from pgvector_perf.config import settings
 from pgvector_perf.schemas import NOT_GIVEN, NotGiven, PointType, Type
 
 
@@ -18,8 +19,14 @@ class PgvectorPerf(Generic[PointType]):
     def __init__(
         self,
         url: Optional[Text] = None,
+        *args,
         model: Type[PointType] | NotGiven = NOT_GIVEN,
+        vector_dimensions: Optional[int] = None,
+        vector_table: Optional[Text] = None,
+        vector_index: Optional[Text] = None,
+        admin_database: Optional[Text] = None,
         echo: bool = False,
+        **kwargs,
     ):
         # Validate url
         url = (
@@ -37,6 +44,10 @@ class PgvectorPerf(Generic[PointType]):
         self._engine = create_engine(url, echo=echo)
         self._session_factory = sessionmaker(bind=self._engine)
         self._model: Type[PointType] = model
+        self._vector_dimensions = vector_dimensions or settings.vector_dimensions
+        self._vector_table = vector_table or settings.vector_table
+        self._vector_index = vector_index or settings.vector_index
+        self._admin_database = admin_database or settings.admin_database
 
         # Initialize resources
         self.databases = resources.Databases(self)
@@ -60,3 +71,15 @@ class PgvectorPerf(Generic[PointType]):
     @property
     def model(self):
         return self._model
+
+    @property
+    def vector_dimensions(self) -> int:
+        return self._vector_dimensions
+
+    @property
+    def vector_table(self) -> Text:
+        return self._vector_table
+
+    @property
+    def vector_index(self) -> Text:
+        return self._vector_index
