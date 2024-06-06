@@ -1,19 +1,23 @@
-from typing import TYPE_CHECKING, List, Literal, Optional, Text, overload
+from typing import TYPE_CHECKING, Generic, List, Literal, Optional, Text, overload
 
 from sqlalchemy import select
 
 from pgvector_perf.exceptions import PointNotFoundError
-from pgvector_perf.schemas import PointWithEmbedding, PointWithEmbeddingSchema
+from pgvector_perf.schemas import (
+    PointType,
+    PointWithEmbedding,
+    PointWithEmbeddingSchema,
+)
 
 if TYPE_CHECKING:
     from pgvector_perf.client import PgvectorPerf
 
 
-class Points:
+class Points(Generic[PointType]):
 
-    _client: "PgvectorPerf"
+    _client: "PgvectorPerf[PointType]"
 
-    def __init__(self, client: "PgvectorPerf"):
+    def __init__(self, client: "PgvectorPerf[PointType]"):
         self._client = client
 
     def list(

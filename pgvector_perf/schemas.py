@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Text, Type
+from typing import List, Text, Type, TypeVar
 
 import pytz
 from pgvector.sqlalchemy import Vector
@@ -43,7 +43,7 @@ class PointWithEmbeddingSchema(BaseModel):
     _sql_model: Type[PointWithEmbedding] = PrivateAttr(default=PointWithEmbedding)
 
     @classmethod
-    def sql_model(cls) -> Type[PointWithEmbedding]:
+    def sql_model(cls):
         return cls._sql_model
 
     @classmethod
@@ -58,5 +58,7 @@ class PointWithEmbeddingSchema(BaseModel):
             embedding=self.embedding,
         )
 
+
+PointType = TypeVar("PointType", bound=PointWithEmbeddingSchema)
 
 NOT_GIVEN = NotGiven()

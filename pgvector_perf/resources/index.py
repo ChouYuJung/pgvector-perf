@@ -1,17 +1,19 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic
 
 from sqlalchemy import Index as SqlIndex
+
+from pgvector_perf.schemas import PointType
 
 if TYPE_CHECKING:
 
     from pgvector_perf.client import PgvectorPerf
 
 
-class Index:
+class Index(Generic[PointType]):
 
-    _client: "PgvectorPerf"
+    _client: "PgvectorPerf[PointType]"
 
-    def __init__(self, client: "PgvectorPerf"):
+    def __init__(self, client: "PgvectorPerf[PointType]"):
         self._client = client
 
     def touch(self, *args, **kwargs):

@@ -1,19 +1,20 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic
 
 from sqlalchemy import text as sql_text
 from sqlalchemy.exc import ProgrammingError
 
 from pgvector_perf.config import logger
+from pgvector_perf.schemas import PointType
 
 if TYPE_CHECKING:
     from pgvector_perf.client import PgvectorPerf
 
 
-class Databases:
+class Databases(Generic[PointType]):
 
-    _client: "PgvectorPerf"
+    _client: "PgvectorPerf[PointType]"
 
-    def __init__(self, client: "PgvectorPerf"):
+    def __init__(self, client: "PgvectorPerf[PointType]"):
         self._client = client
 
     def touch(self, *args, **kwargs):

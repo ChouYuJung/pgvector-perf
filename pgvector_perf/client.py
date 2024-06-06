@@ -1,14 +1,14 @@
 import os
-from typing import Optional, Text
+from typing import Generic, Optional, Text
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from pgvector_perf import resources
-from pgvector_perf.schemas import NOT_GIVEN, NotGiven, PointWithEmbeddingSchema
+from pgvector_perf.schemas import NOT_GIVEN, NotGiven, PointType, Type
 
 
-class PgvectorPerf:
+class PgvectorPerf(Generic[PointType]):
 
     databases: resources.Databases
     tables: resources.Tables
@@ -18,7 +18,7 @@ class PgvectorPerf:
     def __init__(
         self,
         url: Optional[Text] = None,
-        model: PointWithEmbeddingSchema | NotGiven = NOT_GIVEN,
+        model: Type[PointType] | NotGiven = NOT_GIVEN,
         echo: bool = False,
     ):
         # Validate url
@@ -31,12 +31,12 @@ class PgvectorPerf:
         if url is None:
             raise ValueError("No PostgreSQL URL provided")
         # Validate model
-        if not isinstance(model, PointWithEmbeddingSchema):
-            raise ValueError("Model must be an instance of PointWithEmbeddingSchema.")
+        if not model or model is NOT_GIVEN or isinstance(model, NotGiven):
+            raise ValueError("No model provided")
 
         self._engine = create_engine(url, echo=echo)
         self._session_factory = sessionmaker(bind=self._engine)
-        self._model = model
+        self._model: Type[PointType] = model
 
         # Initialize resources
         self.databases = resources.Databases(self)
