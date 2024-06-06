@@ -1,5 +1,5 @@
 import logging
-from typing import Text
+from typing import Optional, Text
 
 from pydantic_settings import BaseSettings
 from rich.console import Console
@@ -15,8 +15,11 @@ class Settings(BaseSettings):
     vector_table: Text = "point_with_embeddings"
     vector_index: Text = "index_embedding"
 
-    # Extra settings
+    # Extra database settings
     admin_database: Text = "postgres"
+
+    # Testing settings
+    PYTEST_CURRENT_TEST: Optional[Text] = None
 
 
 settings = Settings()
