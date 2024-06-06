@@ -33,6 +33,7 @@ class Points(Generic[PointType]):
         model: Optional[Text],
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        sort_desc: bool = True,
         **kwargs,
     ) -> List[PointType]:
         sql_model = self._client.model.sql_model()
@@ -47,6 +48,9 @@ class Points(Generic[PointType]):
                 stmt = stmt.limit(limit)
             if offset is not None:
                 stmt = stmt.offset(offset)
+            stmt = stmt.order_by(
+                sql_model.created_at.desc() if sort_desc else sql_model.created_at.asc()
+            )
             result = session.execute(stmt).scalars().all()
             return [self._client.model.from_sql(point) for point in result]
 
