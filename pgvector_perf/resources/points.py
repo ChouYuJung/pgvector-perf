@@ -2,12 +2,8 @@ from typing import TYPE_CHECKING, Generic, List, Literal, Optional, Text, overlo
 
 from sqlalchemy import select
 
-from pgvector_perf.exceptions import PointNotFoundError
-from pgvector_perf.schemas import (
-    PointType,
-    PointWithEmbedding,
-    PointWithEmbeddingSchema,
-)
+import pgvector_perf.exceptions
+from pgvector_perf.schemas import PointType
 
 if TYPE_CHECKING:
     from pgvector_perf.client import PgvectorPerf
@@ -28,7 +24,7 @@ class Points(Generic[PointType]):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         **kwargs,
-    ) -> List["PointWithEmbeddingSchema"]:
+    ) -> List[PointType]:
         sql_model = self._client.model.sql_model()
 
         with self._client.session_factory() as session:
@@ -47,35 +43,38 @@ class Points(Generic[PointType]):
     @overload
     def retrieve(
         self, id: int, *args, not_found_ok: Literal[False] = False, **kwargs
-    ) -> "PointWithEmbeddingSchema": ...
+    ) -> PointType: ...
 
     @overload
     def retrieve(
         self, id: int, *args, not_found_ok: Literal[True], **kwargs
-    ) -> Optional["PointWithEmbeddingSchema"]: ...
+    ) -> Optional[PointType]: ...
 
     def retrieve(
         self, id: int, *args, not_found_ok: bool = False, **kwargs
-    ) -> Optional["PointWithEmbeddingSchema"]:
+    ) -> Optional[PointType]:
         if not id:
             raise ValueError("No ID provided")
 
-        sql_model: "PointWithEmbedding" = self._client.model._sql_model
+        sql_model = self._client.model._sql_model
+
         with self._client.session_factory() as session:
-            point: Optional["PointWithEmbedding"] = session.query(sql_model).get(
-                {"id": id}
-            )
+            stmt = select(sql_model)
+            stmt = stmt.where(sql_model.id == id)
+            point = session.execute(stmt).scalar_one_or_none()
             if point is None:
                 if not_found_ok:
                     return None
-                raise PointNotFoundError(f"No point found with ID: {id}")
+                raise pgvector_perf.exceptions.PointNotFoundError(
+                    f"No point found with ID: {id}"
+                )
             else:
-                return PointWithEmbeddingSchema.from_sql(point)
+                return self._client.model.from_sql(point)
 
-    def create(self, point: PointWithEmbeddingSchema, *args, **kwargs):
+    def create(self, point: PointType, *args, **kwargs):
         pass
 
-    def update(self, id: Text, point: PointWithEmbeddingSchema, *args, **kwargs):
+    def update(self, id: Text, point: PointType, *args, **kwargs):
         pass
 
     def delete(self, id: Text, *args, **kwargs):
