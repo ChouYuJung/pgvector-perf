@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import List, Text, Type
 
+import pytz
 from pgvector.sqlalchemy import Vector
-from pydantic import BaseModel, ConfigDict, PrivateAttr
-from sqlalchemy import Integer, String
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import declarative_base, mapped_column
 
 from pgvector_perf.config import settings
@@ -21,6 +23,12 @@ class PointWithEmbedding(Base):
     text = mapped_column(String, nullable=False)
     model = mapped_column(String, index=True, nullable=False, default="default")
     embedding = mapped_column(Vector(settings.vector_dimensions), nullable=False)
+    created_at = mapped_column(
+        DateTime,
+        index=True,
+        nullable=False,
+        default_factory=lambda: datetime.now(tz=pytz.utc),
+    )
 
 
 class PointWithEmbeddingSchema(BaseModel):
@@ -30,6 +38,7 @@ class PointWithEmbeddingSchema(BaseModel):
     text: Text
     model: Text
     embedding: List[float]
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=pytz.utc))
 
     _sql_model: Type[PointWithEmbedding] = PrivateAttr(default=PointWithEmbedding)
 
