@@ -1,4 +1,4 @@
-from typing import List, Text
+from typing import List, Text, Type
 
 from pgvector.sqlalchemy import Vector
 from pydantic import BaseModel, ConfigDict, PrivateAttr
@@ -18,8 +18,8 @@ class PointWithEmbedding(Base):
     __tablename__ = "point_with_embeddings"
 
     id = mapped_column(Integer, primary_key=True)
-    text = mapped_column(String, index=True, nullable=False)
-    model = mapped_column(String, nullable=False, default="default")
+    text = mapped_column(String, nullable=False)
+    model = mapped_column(String, index=True, nullable=False, default="default")
     embedding = mapped_column(Vector(settings.vector_dimensions), nullable=False)
 
 
@@ -31,7 +31,11 @@ class PointWithEmbeddingSchema(BaseModel):
     model: Text
     embedding: List[float]
 
-    _sql_model: PointWithEmbedding = PrivateAttr(default=PointWithEmbedding)
+    _sql_model: Type[PointWithEmbedding] = PrivateAttr(default=PointWithEmbedding)
+
+    @classmethod
+    def sql_model(cls) -> Type[PointWithEmbedding]:
+        return cls._sql_model
 
     @classmethod
     def from_sql(cls, point_with_embedding: PointWithEmbedding):
