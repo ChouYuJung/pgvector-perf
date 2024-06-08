@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Generic
 
+from sqlalchemy import Engine, create_engine
 from sqlalchemy import text as sql_text
 from sqlalchemy.exc import ProgrammingError
 
@@ -22,7 +23,7 @@ class Databases(Generic[PointType]):
         self.activate_vector(*args, **kwargs)
 
     def create(self, *args, exist_ok: bool = True, **kwargs):
-        engine = self._client.engine
+        engine = self._default_engine()
         db_name = self._client.database_name
 
         with engine.connect() as connection:
@@ -70,3 +71,7 @@ class Databases(Generic[PointType]):
                     raise e
             else:
                 logger.debug(f"Extension '{ext_name}' already exists.")
+
+    def _default_engine(self) -> "Engine":
+        url = self._client.engine.url.set(database="postgres")
+        return create_engine(url, echo=self._client.echo)

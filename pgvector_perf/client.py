@@ -48,6 +48,7 @@ class PgvectorPerf(Generic[PointType]):
         self._vector_table = vector_table or settings.vector_table
         self._vector_index = vector_index or settings.vector_index
         self._admin_database = admin_database or settings.admin_database
+        self.echo = echo
 
         # Initialize resources
         self.databases = resources.Databases(self)
