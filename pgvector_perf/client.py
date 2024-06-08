@@ -1,12 +1,19 @@
 import os
 from typing import Generic, Optional, Text
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.engine import URL
+from sqlalchemy.orm import Session, sessionmaker
 
 from pgvector_perf import resources
 from pgvector_perf.config import settings
-from pgvector_perf.schemas import NOT_GIVEN, NotGiven, PointType, Type
+from pgvector_perf.schemas import (
+    NOT_GIVEN,
+    NotGiven,
+    PointType,
+    PointWithEmbeddingSchema,
+    Type,
+)
 
 
 class PgvectorPerf(Generic[PointType]):
@@ -18,9 +25,9 @@ class PgvectorPerf(Generic[PointType]):
 
     def __init__(
         self,
-        url: Optional[Text] = None,
+        url: Optional[Text | URL] = None,
         *args,
-        model: Type[PointType] | NotGiven = NOT_GIVEN,
+        model: Type[PointType] = PointWithEmbeddingSchema,
         vector_dimensions: Optional[int] = None,
         vector_table: Optional[Text] = None,
         vector_index: Optional[Text] = None,
@@ -41,8 +48,9 @@ class PgvectorPerf(Generic[PointType]):
         if not model or model is NOT_GIVEN or isinstance(model, NotGiven):
             raise ValueError("No model provided")
 
-        self._engine = create_engine(url, echo=echo)
-        self._session_factory = sessionmaker(bind=self._engine)
+        self._url = url
+        self._engine: Optional["Engine"] = None
+        self._session_factory: Optional["sessionmaker[Session]"] = None
         self._model: Type[PointType] = model
         self._vector_dimensions = vector_dimensions or settings.vector_dimensions
         self._vector_table = vector_table or settings.vector_table
@@ -57,16 +65,20 @@ class PgvectorPerf(Generic[PointType]):
 
     @property
     def engine(self):
+        if self._engine is None:
+            self._engine = create_engine(self._url, echo=self.echo)
         return self._engine
 
     @property
     def database_name(self) -> Text:
-        if self._engine.url.database is None:
+        if self.engine.url.database is None:
             raise ValueError("No database name provided in the URL.")
-        return self._engine.url.database
+        return self.engine.url.database
 
     @property
     def session_factory(self):
+        if self._session_factory is None:
+            self._session_factory = sessionmaker(bind=self._engine)
         return self._session_factory
 
     @property

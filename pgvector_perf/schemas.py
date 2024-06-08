@@ -27,7 +27,7 @@ class PointWithEmbedding(Base):
         DateTime,
         index=True,
         nullable=False,
-        default_factory=lambda: datetime.now(tz=pytz.utc),
+        default=lambda: datetime.now(tz=pytz.utc),
     )
 
 
