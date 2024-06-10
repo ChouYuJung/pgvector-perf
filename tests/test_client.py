@@ -5,9 +5,9 @@ from sqlalchemy import text as sql_text
 from sqlalchemy.engine.url import URL
 
 from pgvector_perf.client import PgvectorPerf
-from pgvector_perf.config import console
-from pgvector_perf.schemas import PointWithEmbedding
-from pgvector_perf.utils import gen_session_id
+from pgvector_perf.config import console, settings
+from pgvector_perf.schemas import PointWithEmbedding, PointWithEmbeddingSchema
+from pgvector_perf.utils import dummy_embedding, gen_session_id
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -59,3 +59,12 @@ def test_client_point_operations(pg_url: URL):
     console.print(f"\nTesting client database operations with URL: '{pg_url}'.")
 
     client = PgvectorPerf(url=pg_url, echo=True)
+    point = client.points.create(
+        PointWithEmbeddingSchema.model_validate(
+            {
+                "text": "This is a test.",
+                "model": "pytest",
+                "embedding": dummy_embedding(settings.vector_dimensions),
+            }
+        )
+    )

@@ -18,10 +18,10 @@ from pgvector_perf.schemas import (
 
 class PgvectorPerf(Generic[PointType]):
 
-    databases: resources.Databases
-    tables: resources.Tables
-    index: resources.Index
-    points: resources.Points
+    databases: resources.Databases[PointType]
+    tables: resources.Tables[PointType]
+    index: resources.Index[PointType]
+    points: resources.Points[PointType]
 
     def __init__(
         self,
@@ -79,7 +79,7 @@ class PgvectorPerf(Generic[PointType]):
     @property
     def session_factory(self):
         if self._session_factory is None:
-            self._session_factory = sessionmaker(bind=self._engine)
+            self._session_factory = sessionmaker(bind=self.engine)
         return self._session_factory
 
     @property
