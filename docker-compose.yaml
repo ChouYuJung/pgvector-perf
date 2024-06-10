@@ -16,3 +16,16 @@ services:
       resources:
         limits:
           cpus: '1.0'
+
+  pgvector-perf-pgweb:
+    image: sosedoff/pgweb
+    container_name: pgvector-perf-pgweb
+    ports:
+      - "15433:8081"
+    links:
+      - pgvector-perf-postgres:pgvector-perf-postgres
+    environment:
+      - DATABASE_URL=postgres://postgres:pgvector-perf-password@pgvector-perf-postgres:5432/postgres?sslmode=disable
+    depends_on:
+      - pgvector-perf-postgres
+    restart: always
