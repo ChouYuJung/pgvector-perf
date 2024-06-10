@@ -131,3 +131,12 @@ def test_client_point_operations(pg_url: URL):
             }
         )
     )
+
+    # Query points with vector
+    points_with_distance = client.points.query(
+        dummy_embedding(settings.vector_dimensions)
+    )
+    assert len(points_with_distance) > 0
+    assert all(p[0].id is not None for p in points_with_distance) and all(
+        p[1] > 0 for p in points_with_distance
+    )

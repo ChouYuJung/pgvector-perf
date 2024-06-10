@@ -63,7 +63,7 @@ class Points(Generic[PointType]):
                 )
             stmt = stmt.order_by(sql_model.embedding.l2_distance(embedding))
             stmt = stmt.limit(limit)
-            result = session.execute(stmt).scalars().all()
+            result = session.execute(stmt).all()
             return [
                 (self._client.model.from_sql(point), distance)
                 for point, distance in result

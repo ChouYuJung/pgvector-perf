@@ -67,13 +67,16 @@ class PointWithEmbeddingSchema(BaseModel):
         )
         content += RichText("(", style="default")
         content += RichText("id", style="yellow") + eq
-        content += RichText(f"{self.id}", style="blue") + comma
+        content += RichText(f"{self.id}", style="cyan") + comma
         content += RichText("text", style="yellow") + eq
         content += RichText(f"'{self.text[:20]}'", style="green") + comma
         content += RichText("model", style="yellow") + eq
         content += RichText(f"'{self.model}'", style="green") + comma
         content += RichText("embedding", style="yellow") + eq
-        content += RichText(f"Vector({len(self.embedding)})", style="cyan") + comma
+        content += RichText("Vector", style="magenta")
+        content += RichText("(", style="default")
+        content += RichText(f"{len(self.embedding)}", style="cyan")
+        content += RichText(")", style="default") + comma
         content += RichText("created_at", style="yellow") + eq
         content += RichText(f"'{self.created_at.isoformat()}'", style="green")
         content += RichText(")", style="default")
