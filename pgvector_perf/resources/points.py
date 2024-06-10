@@ -6,6 +6,7 @@ from typing import (
     List,
     Literal,
     Optional,
+    Sequence,
     Text,
     Tuple,
     overload,
@@ -15,6 +16,7 @@ from sqlalchemy import select
 
 import pgvector_perf.exceptions
 from pgvector_perf.schemas import PointType
+from pgvector_perf.utils import batch_process
 
 if TYPE_CHECKING:
     from pgvector_perf.client import PgvectorPerf
@@ -70,26 +72,24 @@ class Points(Generic[PointType]):
     def list(
         self,
         *args,
-        text: Optional[Text],
-        model: Optional[Text],
-        limit: Optional[int] = None,
+        text: Optional[Text] = None,
+        model: Optional[Text] = None,
+        limit: int = 5,
         offset: Optional[int] = None,
         sort_desc: bool = True,
         **kwargs,
     ) -> List[PointType]:
-        if limit is not None:
-            limit = max(1, min(limit, self.hard_limit))
+        limit = max(1, min(limit, self.hard_limit))
 
         sql_model = self._client.model.sql_model()
 
         with self._client.session_factory() as session:
             stmt = select(sql_model)
-            if model is not None:
-                stmt = stmt.where(sql_model.model == model)
             if text is not None:
                 stmt.where(sql_model.text.ilike(f"%{text}%"))
-            if limit is not None:
-                stmt = stmt.limit(limit)
+            if model is not None:
+                stmt = stmt.where(sql_model.model == model)
+            stmt = stmt.limit(limit)
             if offset is not None:
                 stmt = stmt.offset(offset)
             stmt = stmt.order_by(
@@ -135,7 +135,24 @@ class Points(Generic[PointType]):
             session.add(sql_point)
             session.commit()
             session.refresh(sql_point)
-            return self._client.model.from_sql(sql_point)
+            return point.update_from_sql(sql_point)
+
+    def create_batch(
+        self, points: Sequence[PointType], *args, batch_size: int = 16, **kwargs
+    ) -> List[PointType]:
+        output_points: List[PointType] = []
+        with self._client.session_factory() as session:
+            for points_chunk in batch_process(points, batch_size=batch_size):
+                sql_points = [
+                    self._client.model.to_sql(point) for point in points_chunk
+                ]
+                session.add_all(sql_points)
+                session.commit()
+                for _point, sql_point in zip(points_chunk, sql_points):
+                    session.refresh(sql_point)
+                    _point.update_from_sql(sql_point)
+                    output_points.append(_point)
+        return output_points
 
     def update(
         self,

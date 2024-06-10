@@ -96,6 +96,14 @@ class PointWithEmbeddingSchema(BaseModel):
             created_at=self.created_at,
         )
 
+    def update_from_sql(self, point_with_embedding: PointWithEmbedding):
+        self.id = point_with_embedding.id
+        self.text = point_with_embedding.text
+        self.model = point_with_embedding.model
+        self.embedding = point_with_embedding.embedding
+        self.created_at = point_with_embedding.created_at
+        return self
+
 
 PointType = TypeVar("PointType", bound=PointWithEmbeddingSchema)
 

@@ -9,6 +9,22 @@ from pgvector_perf.config import console, settings
 from pgvector_perf.schemas import PointWithEmbedding, PointWithEmbeddingSchema
 from pgvector_perf.utils import dummy_embedding, gen_session_id
 
+test_model_name = "pytest_model"
+
+animals = [
+    "dog",
+    "cat",
+    "fish",
+    "bird",
+    "rabbit",
+    "hamster",
+    "turtle",
+    "lizard",
+    "snake",
+    "rat",
+    "frog",
+]
+
 
 @pytest.fixture(autouse=True, scope="module")
 def pg_url():
@@ -59,12 +75,36 @@ def test_client_point_operations(pg_url: URL):
     console.print(f"\nTesting client database operations with URL: '{pg_url}'.")
 
     client = PgvectorPerf(url=pg_url, echo=True)
+
+    # Create point
     point = client.points.create(
         PointWithEmbeddingSchema.model_validate(
             {
-                "text": "This is a test.",
-                "model": "pytest",
+                "text": f"This is a {animals[0]}.",
+                "model": test_model_name,
                 "embedding": dummy_embedding(settings.vector_dimensions),
             }
         )
     )
+    assert point.id is not None and point.model == test_model_name
+    # Create batch points
+    batch_points = client.points.create_batch(
+        [
+            PointWithEmbeddingSchema.model_validate(
+                {
+                    "text": f"This is a {n}.",
+                    "model": test_model_name,
+                    "embedding": dummy_embedding(settings.vector_dimensions),
+                }
+            )
+            for n in animals[1:]
+        ]
+    )
+    assert len(batch_points) == 10
+
+    # Get point
+    point = client.points.retrieve(point.id, not_found_ok=False)
+    assert point is not None and point.model == test_model_name
+    # List points
+    points = client.points.list(model=test_model_name)
+    assert len(points) > 1 and all(p.id is not None for p in points)

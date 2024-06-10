@@ -1,9 +1,12 @@
 import base64
+import itertools
 from datetime import datetime
-from typing import List, Literal, Text, cast, overload
+from typing import Generator, List, Literal, Sequence, Text, TypeVar, cast, overload
 
 import numpy as np
 import pytz
+
+T = TypeVar("T")
 
 
 def gen_session_id(prefix: Text = "pgv"):
@@ -40,3 +43,13 @@ def dummy_embedding(
     array = np.random.rand(*shape).astype(np.float32)  # type: ignore
     array = cast(np.ndarray, array)
     return np_to_base64(array) if encoding_format == "base64" else array.tolist()
+
+
+def batch_process(
+    items: Sequence[T], batch_size: int = 32
+) -> Generator[Sequence[T], None, None]:
+    it = iter(items)
+    chunk = tuple(itertools.islice(it, batch_size))
+    while chunk:
+        yield chunk
+        chunk = tuple(itertools.islice(it, batch_size))
