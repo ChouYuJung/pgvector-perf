@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import List, Text, Type, TypeVar
+from typing import ClassVar, List, Text, Type, TypeVar
 
 import pytz
 from pgvector.sqlalchemy import Vector
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import declarative_base, mapped_column
 
@@ -40,7 +40,7 @@ class PointWithEmbeddingSchema(BaseModel):
     embedding: List[float]
     created_at: datetime = Field(default_factory=lambda: datetime.now(tz=pytz.utc))
 
-    _sql_model: Type[PointWithEmbedding] = PrivateAttr(default=PointWithEmbedding)
+    _sql_model: ClassVar[Type[PointWithEmbedding]] = PointWithEmbedding
 
     @classmethod
     def sql_model(cls):

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic, Optional
 
 from sqlalchemy import Engine, create_engine
 from sqlalchemy import text as sql_text
@@ -23,7 +23,7 @@ class Databases(Generic[PointType]):
         self.activate_vector(*args, **kwargs)
 
     def create(self, *args, exist_ok: bool = True, **kwargs):
-        engine = self._default_engine()
+        engine = self._default_engine(auto_commit=True)
         db_name = self._client.database_name
 
         with engine.connect() as connection:
@@ -72,6 +72,13 @@ class Databases(Generic[PointType]):
             else:
                 logger.debug(f"Extension '{ext_name}' already exists.")
 
-    def _default_engine(self) -> "Engine":
+    def _default_engine(
+        self,
+        auto_commit: Optional[bool] = None,
+        **kwargs,
+    ) -> "Engine":
         url = self._client.engine.url.set(database="postgres")
-        return create_engine(url, echo=self._client.echo)
+        extra_parameters = kwargs
+        if auto_commit is not None:
+            extra_parameters["isolation_level"] = "AUTOCOMMIT"
+        return create_engine(url, echo=self._client.echo, **extra_parameters)
