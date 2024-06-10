@@ -186,7 +186,7 @@ class Points(Generic[PointType]):
             session.refresh(sql_point)
             return self._client.model.from_sql(sql_point)
 
-    def delete(self, id: Text, *args, not_found_ok: bool = False, **kwargs) -> bool:
+    def delete(self, id: int, *args, not_found_ok: bool = False, **kwargs) -> bool:
         with self._client.session_factory() as session:
             sql_model = self._client.model._sql_model
             stmt = select(sql_model).where(sql_model.id == id)

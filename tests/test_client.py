@@ -117,3 +117,17 @@ def test_client_point_operations(pg_url: URL):
     # Update point by dict
     point = client.points.update(point.id, text=_text)
     assert point.id is not None and point.text == _text
+
+    # Delete point
+    _text = point.text
+    assert client.points.delete(point.id, not_found_ok=False)
+    assert client.points.retrieve(point.id, not_found_ok=True) is None
+    client.points.create(
+        PointWithEmbeddingSchema.model_validate(
+            {
+                "text": _text,
+                "model": test_model_name,
+                "embedding": dummy_embedding(settings.vector_dimensions),
+            }
+        )
+    )
