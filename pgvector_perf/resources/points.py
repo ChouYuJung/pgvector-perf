@@ -156,7 +156,7 @@ class Points(Generic[PointType]):
 
     def update(
         self,
-        id: Text,
+        id: int,
         point: Optional[PointType] = None,
         *args,
         update_attrs: Optional[Dict[Text, Any]] = None,

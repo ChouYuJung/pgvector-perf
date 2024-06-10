@@ -104,7 +104,16 @@ def test_client_point_operations(pg_url: URL):
 
     # Get point
     point = client.points.retrieve(point.id, not_found_ok=False)
-    assert point is not None and point.model == test_model_name
+    assert point.id is not None and point.model == test_model_name
     # List points
     points = client.points.list(model=test_model_name)
     assert len(points) > 1 and all(p.id is not None for p in points)
+
+    # Update point
+    _text = point.text
+    point.text = point.text + " Updated."
+    point = client.points.update(point.id, point)
+    assert point.id is not None and point.text.endswith("Updated.")
+    # Update point by dict
+    point = client.points.update(point.id, text=_text)
+    assert point.id is not None and point.text == _text
