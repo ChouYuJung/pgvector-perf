@@ -65,6 +65,7 @@ class Databases(Generic[PointType]):
                 # If the extension does not exist, create it
                 try:
                     connection.execute(sql_text(f"CREATE EXTENSION {ext_name}"))
+                    connection.commit()
                     logger.info(f"Extension '{ext_name}' created successfully.")
                 except ProgrammingError as e:
                     logger.error(f"Error creating extension: {e}")
