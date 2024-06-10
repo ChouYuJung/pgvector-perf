@@ -51,3 +51,11 @@ def test_client_database_operations(pg_url: URL):
     client.databases.touch()
     # Create tables
     client.tables.touch()
+    # Create index
+    client.index.touch()
+
+
+def test_client_point_operations(pg_url: URL):
+    console.print(f"\nTesting client database operations with URL: '{pg_url}'.")
+
+    client = PgvectorPerf(url=pg_url, echo=True)

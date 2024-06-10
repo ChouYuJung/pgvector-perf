@@ -61,6 +61,7 @@ class PgvectorPerf(Generic[PointType]):
         # Initialize resources
         self.databases = resources.Databases(self)
         self.tables = resources.Tables(self)
+        self.index = resources.Index(self)
         self.points = resources.Points(self)
 
     @property
