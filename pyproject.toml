@@ -18,6 +18,12 @@ rich = "^13"
 sqlalchemy = "^2"
 yarl = "^1"
 
+[tool.poetry.group.prepare.dependencies]
+FlagEmbedding = "^1"
+datasets = "^2"
+huggingface-hub = "^0"
+pyarrow = "^16"
+
 [tool.poetry.group.dev.dependencies]
 black = "*"
 isort = "*"
