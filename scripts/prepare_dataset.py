@@ -9,6 +9,7 @@ from datasets import load_dataset
 from diskcache import FanoutCache
 from FlagEmbedding import BGEM3FlagModel
 from pydantic import BaseModel
+from tqdm import tqdm
 
 T = TypeVar("T")
 
@@ -102,7 +103,7 @@ def process_dataset_intermediate(save_dataset_path: Text = dataset_intermediate_
         batch = []
         lang_en = "en"
         lang_tar = subset.replace(lang_en, "").strip(" _-")
-        for row in dataset:
+        for row in tqdm(dataset, leave=False, desc=f"{subset}:{split}"):
             trans_data = row["translation"]
             batch.extend(
                 [
@@ -140,8 +141,10 @@ def process_dataset_intermediate(save_dataset_path: Text = dataset_intermediate_
     parquet_writer = None
     # for subset in subsets:
     #     for split in splits:
-    for subset in ["en-vi", "en-zh"]:
-        for split in ["train"]:
+    subsets = ["en-vi", "en-zh"]
+    splits = ["test"]
+    for subset in tqdm(subsets, leave=False, desc="Processing subsets"):
+        for split in tqdm(splits, leave=False, desc="Processing splits"):
             dataset = load_dataset(dataset_name, subset, split=split)
             for table in _process_dataset_intermediate_in_chunks(
                 dataset, subset=subset, split=split
