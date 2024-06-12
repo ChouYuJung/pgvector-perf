@@ -52,10 +52,14 @@ langs = [
     "zh",
 ]
 dataset_intermediate_path = "data/opus-100-intermediate.parquet"
+dataset_feature_path = "data/opus-100-feature.parquet"
 
 compression = "snappy"
 cache = FanoutCache("data/BAAI__bge_m3.cache")
-model = BGEM3FlagModel("BAAI/bge-m3")
+strings_set = FanoutCache(f"data/{dataset_name.replace('/', '__')}.cache")
+strings_set.clear()
+model_name = "BAAI/bge-m3"
+model = BGEM3FlagModel(model_name)
 
 
 def np_to_base64(array: npt.NDArray) -> Text:
@@ -75,7 +79,6 @@ def embedding_texts(
 
     for i, text in enumerate(texts):
         if text in cache:
-            print(f"cache hit: {text}")
             embeddings[i] = base64_to_np(cache[text])  # type: ignore
             cached_indices.append(i)
         else:
@@ -105,8 +108,8 @@ def process_dataset_intermediate(save_dataset_path: Text = dataset_intermediate_
         lang_tar = subset.replace(lang_en, "").strip(" _-")
         for row in tqdm(dataset, leave=False, desc=f"{subset}:{split}"):
             trans_data = row["translation"]
-            batch.extend(
-                [
+            if trans_data[lang_en] not in strings_set:
+                batch.append(
                     PointIntermediate.model_validate(
                         {
                             "id": id_accumulator + 1,
@@ -117,9 +120,14 @@ def process_dataset_intermediate(save_dataset_path: Text = dataset_intermediate_
                             "source": dataset_name,
                         }
                     ).model_dump(),
+                )
+                id_accumulator += 1
+                strings_set[trans_data[lang_en]] = True
+            if trans_data[lang_tar] not in strings_set:
+                batch.append(
                     PointIntermediate.model_validate(
                         {
-                            "id": id_accumulator + 2,
+                            "id": id_accumulator + 1,
                             "text": trans_data[lang_tar],
                             "language": lang_tar,
                             "split": split,
@@ -127,9 +135,9 @@ def process_dataset_intermediate(save_dataset_path: Text = dataset_intermediate_
                             "source": dataset_name,
                         }
                     ).model_dump(),
-                ]
-            )
-            id_accumulator += 2
+                )
+                id_accumulator += 1
+                strings_set[trans_data[lang_tar]] = True
 
             if len(batch) >= chunk_size:
                 yield pa.Table.from_pylist(batch)
@@ -141,7 +149,7 @@ def process_dataset_intermediate(save_dataset_path: Text = dataset_intermediate_
     parquet_writer = None
     # for subset in subsets:
     #     for split in splits:
-    subsets = ["en-vi", "en-zh"]
+    subsets = ["en-zh"]
     splits = ["test"]
     for subset in tqdm(subsets, leave=False, desc="Processing subsets"):
         for split in tqdm(splits, leave=False, desc="Processing splits"):
@@ -159,6 +167,41 @@ def process_dataset_intermediate(save_dataset_path: Text = dataset_intermediate_
         parquet_writer.close()
 
     print(f"Dataset successfully saved as '{save_dataset_path}'")
+    print(f"There are {id_accumulator} unique texts in the dataset")
+
+
+def dataset_intermediate_to_feature(
+    intermediate_path: Text = dataset_intermediate_path,
+    feature_path: Text = dataset_feature_path,
+    batch_size: int = 100,
+):
+    def _process_batch(record_batch: "pa.RecordBatch"):
+        record_batch_dict = record_batch.to_pydict()
+        embeddings = embedding_texts(record_batch_dict["text"])
+        record_batch_dict["model"] = [model_name] * len(record_batch_dict["text"])
+        record_batch_dict["embedding_base64"] = list(map(np_to_base64, embeddings))
+        return pa.Table.from_pydict(record_batch_dict)
+
+    parquet_file = pq.ParquetFile(intermediate_path)
+
+    writer = None
+    for batch in tqdm(
+        parquet_file.iter_batches(batch_size=batch_size),
+        desc="Batches",
+        total=parquet_file.metadata.num_rows // batch_size + 1,
+    ):
+        table = _process_batch(batch)
+        if writer is None:
+            writer = pq.ParquetWriter(
+                feature_path, table.schema, compression=compression
+            )
+
+        writer.write_table(table)
+
+    if writer:
+        writer.close()
+
+    print(f"Feature dataset successfully saved as '{feature_path}'")
 
 
 class PointIntermediate(BaseModel):
@@ -177,6 +220,7 @@ class PointFeature(PointIntermediate):
 
 def main():
     process_dataset_intermediate()
+    dataset_intermediate_to_feature()
 
 
 if __name__ == "__main__":
